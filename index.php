@@ -6,7 +6,9 @@
  <script>
  
    $(function(){
-      markon();
+      markon().extend('red','color: #f00','{#f00','#f00}').setControls('#buttons');
+      //markon();
+      //Markon.setControls('#buttons');
    });
    
    function Markon(selector){
@@ -26,7 +28,7 @@
        return new Markon(selector);
    }
    
-   Markon.styles = {bold:{start:'{[',end:']}',css:'font-weight: bold'},italic:{start:'{/',end:'/}',css:'font-style: italic'},strike:{start:'{-',end:'-}',css:'text-decoration: line-through'},underline:{start:'{_',end:'_}',css:'text-decoration: underline'}};
+   Markon.styles = {bold:{start:'{[',end:']}',css:'font-weight: bold'},italic:{start:'{/',end:'/}',css:'font-style: italic'},strike:{start:'{-',end:'-}',css:'text-decoration: line-through'},underline:{start:'{_',end:'_}',css:'text-decoration: underline'},link:{start:'{#=URL ',end:'#}'}};
    Markon.selected = null;
    Markon.elements = null;
    
@@ -55,11 +57,33 @@
    
    Markon.getHtml = function(el){
         var text = $(el).text();
-        var c;
+        var cc,c,url,link_pattern,link_parts,urls;
+        
+        if('link' in Markon.styles) link_pattern = Markon.replaceAll(Markon.replaceAll(Markon.styles.link.start.toLowerCase(),'url',''),' ','');
+        
         for(var k in Markon.styles){
-            c = Markon.styles[c];
-            text = Markon.replaceAll(text,c.start,'<span style="'+c.css+'">');
-            text = Markon.replaceAll(text,c.end,'</span>');
+            c = Markon.styles[k];
+            if(k == 'link'){
+                link_parts = text.split(link_pattern);
+                urls = [];
+                
+                for(var kk in link_parts){
+                    if(parseInt(kk)){
+                       url = link_parts[kk].split(' ')[0];
+                       urls.push([link_pattern+url,url]);
+                    }
+                }
+                
+                for(var kk in urls){
+                    cc = urls[kk];
+                    text = Markon.replaceAll(text,cc[0],'<a target="_blank" href="'+cc[1]+'">');
+                }
+                
+                text = Markon.replaceAll(text,c.end,'</a>');
+            }else{
+                text = Markon.replaceAll(text,c.start,'<span style="'+c.css+'">');
+                text = Markon.replaceAll(text,c.end,'</span>');   
+            }
         }
 
         return text;
@@ -67,6 +91,32 @@
    
    Markon.prototype.get = function(){
       return Markon.get(this.elements);
+   }
+   
+   Markon.setControls = Markon.prototype.setControls = function(parent,filter){
+       parent = $(parent);
+       var html = '';
+       
+       var createHtml = function(name,style){
+           return '<button onclick="Markon.to(\''+style+'\')">'+name+'</button>';
+       }
+       
+       if(jQuery.type(filter) == 'object'){
+           for(var k in filter){
+               if(k in Markon.styles){
+                   html += createHtml(k,k);
+               }
+           }
+       }else{
+         for(var k in Markon.styles){
+             html += createHtml(k,k);
+           }
+       }
+       
+       html = '<div class="buttons">'+html+'</div>';
+       parent.append(html);
+       
+       return this;
    }
    
    Markon.extend = Markon.prototype.extend = function(key,css,start,end){
@@ -80,12 +130,14 @@
          }
          
          if(!ckey || !cstart) return false;
-         if(!cend) cend = Markon.replaceAll(cstart,'{','').'}';
+         if(!cend) cend = Markon.replaceAll(cstart,'{','')+'}';
          
          Markon.styles[ckey] = {start:cstart,end:cend,css:ccss};   
      }else{
         Markon.styles[key] = {start:start,end:end,css:css};   
      }
+     
+     return this;
    }
    
    Markon.get = function(elements){
@@ -150,10 +202,11 @@
 </head>
 <body>
   <div class='markon'></div>
-   <button onclick="Markon.to('bold')">bold</button>
+   <!-- onclick="Markon.to('bold')">bold</button>
    <button onclick="Markon.to('italic')">italic</button>
    <button onclick="Markon.to('underline')">underline</button>
-   <button onclick="Markon.to('strike')">strike</button>
+   <button onclick="Markon.to('strike')">strike</button-->
+   <div id='buttons'></div>
    <button onclick="Markon.convert()">Markon It!</button>
 </body>
 </html>

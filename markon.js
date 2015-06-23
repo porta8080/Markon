@@ -15,7 +15,7 @@ function Markon(selector){
        return new Markon(selector);
    }
    
-   Markon.styles = {bold:{start:'{[',end:']}',css:'font-weight: bold'},italic:{start:'{/',end:'/}',css:'font-style: italic'},strike:{start:'{-',end:'-}',css:'text-decoration: line-through'},underline:{start:'{_',end:'_}',css:'text-decoration: underline'}};
+   Markon.styles = {bold:{start:'{[',end:']}',css:'font-weight: bold'},italic:{start:'{/',end:'/}',css:'font-style: italic'},strike:{start:'{-',end:'-}',css:'text-decoration: line-through'},underline:{start:'{_',end:'_}',css:'text-decoration: underline'},link:{start:'{#=URL',end:'#}'}};
    Markon.selected = null;
    Markon.elements = null;
    
@@ -24,7 +24,7 @@ function Markon(selector){
            Markon.to(style,this.elements[k])
        }
    }
-   
+    
    Markon.to = function(style,markon){
        if(!markon) markon = Markon.selected;
        
@@ -44,11 +44,23 @@ function Markon(selector){
    
    Markon.getHtml = function(el){
         var text = $(el).text();
-        var c;
+        var c,url,link_pattern;
+        
+        if('link' in Markon.styles){
+            link_pattern = Markon.styles.link.start.toLowerCase().split('url').join('');
+            alert(link)
+        }
+        
         for(var k in Markon.styles){
-            c = Markon.styles[c];
-            text = Markon.replaceAll(text,c.start,'<span style="'+c.css+'">');
-            text = Markon.replaceAll(text,c.end,'</span>');
+            if(k == 'link'){
+                url = 
+                text = Markon.replaceAll(text,c.start,'<a>');
+                text = Markon.replaceAll(text,c.end,'</a>');
+            }else{
+                c = Markon.styles[c];
+                text = Markon.replaceAll(text,c.start,'<span style="'+c.css+'">');
+                text = Markon.replaceAll(text,c.end,'</span>');   
+            }
         }
 
         return text;
